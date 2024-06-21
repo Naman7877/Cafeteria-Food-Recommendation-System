@@ -18,9 +18,12 @@ function padRight(str: string, length: number) {
 
 function showMenu() {
     console.log('\nMain Menu :');
-    console.log('1. Register');
-    console.log('2. Login');
-    console.log('3. LogOut\n');
+    const mainMenuOperations = [
+        { Operation: '1', Description: 'Register' },
+        { Operation: '2', Description: 'Login' },
+        { Operation: '3', Description: 'LogOut' },
+    ];
+    console.table(mainMenuOperations);
     rl.question('Choose an option: ', option => {
         switch (option) {
             case '1':
@@ -133,7 +136,7 @@ socket.on('add_item_response', data => {
             if (answer.toLowerCase() === 'yes') {
                 addItem('admin');
             } else {
-                adminOperations();
+                modifyMenu()
             }
         });
     } else {
@@ -144,7 +147,7 @@ socket.on('add_item_response', data => {
                 if (answer.toLowerCase() === 'yes') {
                     addItem('admin');
                 } else {
-                    adminOperations();
+                    modifyMenu()
                 }
             },
         );
@@ -160,7 +163,7 @@ socket.on('delete_item_response', data => {
                 if (answer.toLowerCase() === 'yes') {
                     deleteItem('admin');
                 } else {
-                    adminOperations();
+                    modifyMenu();
                 }
             },
         );
@@ -224,10 +227,14 @@ function adminOperations() {
 
 function modifyMenu() {
     console.log('Modify Menu:');
-    console.log('1. Add Item');
-    console.log('2. Delete Item');
-    console.log('3. Update Item');
-    console.log('4. Back to Admin Operations');
+    const modifyMenuOptions = [
+        { Operation: '1', Description: 'Add Item' },
+        { Operation: '2', Description: 'Delete Item' },
+        { Operation: '3', Description: 'Update Item' },
+        { Operation: '4', Description: 'Back to Admin Operations' },
+    ];
+    console.table(modifyMenuOptions);
+
     rl.question('Choose an option: ', option => {
         switch (option) {
             case '1':
@@ -291,20 +298,26 @@ async function viewMenu() {
 }
 
 async function vote(userId: string) {
-    const itemId = await question('Enter Item Id that you want to vote');
+    const itemId = await question('Enter Item Id that you want to vote:  ');
     socket.emit('vote_for_menu', { userId: userId, itemId: itemId });
 }
 
 socket.on('view_menu_response', data => {
     if (data.success) {
-        console.log(
-            '                          Menu Items:                        \n',
-        );
-        console.table(data.menu);
+        console.log(data.message)
     } else {
         console.log('Failed to retrieve menu: ' + data.message);
     }
     employeeOperations('123');
+});
+
+socket.on('vote_for_menu_response', data => {
+    if (data.success) {
+        console.table(data.menu);
+    } else {
+        console.log('Failed to retrieve menu: ' + data.message);
+    }
+    chefOperations();
 });
 
 socket.on('view_feedbacks_response', data => {
@@ -321,13 +334,19 @@ socket.on('view_feedbacks_response', data => {
 
 // employee functions
 function employeeOperations(userId: string) {
-    console.log('Employee operations:');
-    console.log('1. View Menu');
-    console.log('2. Vote For Menu ');
-    console.log('3. Give Feedback ');
-    console.log('4. View Feedback ');
-    console.log('5. View Notification ');
-    console.log('6. LogOut ');
+    console.log('Employee Operations:');
+
+    const operations = [
+        { Operation: '1', Description: 'View Menu' },
+        { Operation: '2', Description: 'Vote For Menu' },
+        { Operation: '3', Description: 'Give Feedback' },
+        { Operation: '4', Description: 'View Feedback' },
+        { Operation: '5', Description: 'View Notification' },
+        { Operation: '6', Description: 'LogOut' },
+    ];
+
+    console.table(operations);
+
     rl.question('Choose an option: ', option => {
         switch (option) {
             case '1':
@@ -343,7 +362,7 @@ function employeeOperations(userId: string) {
                 viewFeedbacks(userId);
                 break;
             case '5':
-                viewNotifications();
+                viewNotifications(userId);
                 break;
             case '6':
                 logOut();
@@ -355,8 +374,8 @@ function employeeOperations(userId: string) {
     });
 }
 
-function viewNotifications() {
-    socket.emit('view_notification');
+function viewNotifications(userId: string) {
+    socket.emit('view_notification', { userId: userId });
 }
 
 socket.on('view_notification_response', data => {
@@ -366,6 +385,7 @@ socket.on('view_notification_response', data => {
     } else {
         console.error(data.message);
     }
+    employeeOperations(data.userId);
 });
 
 function viewFeedbacks(userId: string) {
@@ -407,24 +427,23 @@ async function giveFeedback(userId: string) {
 }
 
 function chefOperations() {
-    console.log('Chef operations:');
-    console.log('1. view Menu');
-    console.log('2. RollOut Menu');
-    console.log('3. Final menu');
-    console.log('4. LogOut ');
+    console.log('Chef Operations:');
+    const chefOperation = [
+        { Operation: '1', Description: 'RollOut Menu' },
+        { Operation: '2', Description: 'Final Menu' },
+        { Operation: '3', Description: 'LogOut' },
+    ];
+    console.table(chefOperation);
 
     rl.question('Choose an option: ', option => {
         switch (option) {
             case '1':
-                viewMenu();
-                break;
-            case '2':
                 RollOut();
                 break;
-            case '3':
+            case '2':
                 finalMenu();
                 break;
-            case '4':
+            case '3':
                 logOut();
                 break;
             default:
@@ -444,6 +463,22 @@ async function RollOut() {
 async function finalMenu() {
     socket.emit('finalizedMenu');
 }
+
+socket.on(
+    'get_recommendation_response',
+    (data: { success: boolean; rolloutMenu: any, message: string }) => {
+        if (data.success) {
+            console.log('Rollout data retrieval successful!');
+            if (data.rolloutMenu) {
+                console.log('            Rollout Table Data:            ');
+                console.table(data.rolloutMenu);
+            }
+        } else {
+            console.error('Rollout data retrieval failed:', data);
+        }
+        chefOperations();
+    },
+);
 
 socket.on('connect', () => {
     showMenu();

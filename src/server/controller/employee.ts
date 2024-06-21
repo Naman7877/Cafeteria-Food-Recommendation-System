@@ -28,7 +28,6 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
 
     socket.on('vote_for_menu', async data => {
         const { userId, itemId } = data;
-
         try {
             const connection = await pool.getConnection();
             await connection.beginTransaction();
@@ -37,6 +36,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
                 'SELECT userId FROM votedUsersList WHERE userId = ?',
                 [userId],
             );
+            console.log(userVotes)
 
             if (userVotes.length > 0) {
                 socket.emit('vote_for_menu_response', {
@@ -53,6 +53,8 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
                 [itemId],
             );
 
+            console.log(itemId)
+
             await connection.execute(
                 'INSERT INTO votedUsersList (userId, itemId) VALUES (?, ?)',
                 [userId, itemId],
@@ -64,11 +66,13 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
             socket.emit('vote_for_menu_response', {
                 success: true,
                 message: 'Your vote has been recorded successfully.',
+                userId: userId,
             });
         } catch (err) {
             socket.emit('vote_for_menu_response', {
                 success: false,
                 message: 'Database error occurred.',
+                userId: userId
             });
             console.error('Database query error', err);
         }
@@ -164,7 +168,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
 
             socket.emit('view_feedbacks_response', {
                 success: true,
-                menu: results,
+                feedbacks: results,
                 useId: userId,
             });
         } catch (err) {
@@ -207,10 +211,9 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
             );
             connection.release();
 
-            console.log(results);
-
             socket.emit('view_notification_response', {
                 success: true,
+                userId: data.userId,
                 notifications: results,
             });
         } catch (err) {
