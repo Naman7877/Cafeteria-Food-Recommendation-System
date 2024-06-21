@@ -304,7 +304,7 @@ async function vote(userId: string) {
 
 socket.on('view_menu_response', data => {
     if (data.success) {
-        console.log(data.message);
+        console.log(data.menu);
     } else {
         console.log('Failed to retrieve menu: ' + data.message);
     }

@@ -92,7 +92,7 @@ export const handleAuthSocketEvents = (socket: Socket) => {
                 [userId, action, dateTime],
             );
             connection.release();
-            console.log(`Logged action for userId ${userId}: login`);
+            console.log(`--> userId ${userId}: login`);
         } catch (error) {
             console.error('Error logging action:', error);
             throw error;
