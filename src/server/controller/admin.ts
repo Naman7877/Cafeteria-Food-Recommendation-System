@@ -26,9 +26,9 @@ export const handleAdminSocketEvents = (socket: Socket) => {
         } catch (err) {
             socket.emit('add_item_response', {
                 success: false,
-                message: 'Database error',
+                message: err,
             });
-            console.error('Database query error', err);
+            console.error('Database query error:-', err);
         }
     });
 
