@@ -36,7 +36,7 @@ export const handleChefSocketEvents = (socket: Socket) => {
             socket.emit('get_recommendation_response', {
                 success: true,
                 message: 'RollOut Menu : ',
-                rolloutMenu: top5FoodItems
+                rolloutMenu: top5FoodItems,
             });
         } catch (error) {
             console.error('Error fetching top 5 food items:', error);
@@ -66,11 +66,11 @@ export const handleChefSocketEvents = (socket: Socket) => {
                 );
                 await insertNotification(
                     'FinalMenu item: ' +
-                    itemName +
-                    ' with ID ' +
-                    itemId +
-                    ' added to final_menu for date ' +
-                    currentDate,
+                        itemName +
+                        ' with ID ' +
+                        itemId +
+                        ' added to final_menu for date ' +
+                        currentDate,
                 );
             } else {
                 console.log('No items found in rollover table.');

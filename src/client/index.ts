@@ -136,7 +136,7 @@ socket.on('add_item_response', data => {
             if (answer.toLowerCase() === 'yes') {
                 addItem('admin');
             } else {
-                modifyMenu()
+                modifyMenu();
             }
         });
     } else {
@@ -147,7 +147,7 @@ socket.on('add_item_response', data => {
                 if (answer.toLowerCase() === 'yes') {
                     addItem('admin');
                 } else {
-                    modifyMenu()
+                    modifyMenu();
                 }
             },
         );
@@ -304,7 +304,7 @@ async function vote(userId: string) {
 
 socket.on('view_menu_response', data => {
     if (data.success) {
-        console.log(data.message)
+        console.log(data.message);
     } else {
         console.log('Failed to retrieve menu: ' + data.message);
     }
@@ -466,7 +466,7 @@ async function finalMenu() {
 
 socket.on(
     'get_recommendation_response',
-    (data: { success: boolean; rolloutMenu: any, message: string }) => {
+    (data: { success: boolean; rolloutMenu: any; message: string }) => {
         if (data.success) {
             console.log('Rollout data retrieval successful!');
             if (data.rolloutMenu) {

@@ -36,7 +36,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
                 'SELECT userId FROM votedUsersList WHERE userId = ?',
                 [userId],
             );
-            console.log(userVotes)
+            console.log(userVotes);
 
             if (userVotes.length > 0) {
                 socket.emit('vote_for_menu_response', {
@@ -53,7 +53,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
                 [itemId],
             );
 
-            console.log(itemId)
+            console.log(itemId);
 
             await connection.execute(
                 'INSERT INTO votedUsersList (userId, itemId) VALUES (?, ?)',
@@ -72,7 +72,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
             socket.emit('vote_for_menu_response', {
                 success: false,
                 message: 'Database error occurred.',
-                userId: userId
+                userId: userId,
             });
             console.error('Database query error', err);
         }
