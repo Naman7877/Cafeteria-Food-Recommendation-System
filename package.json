@@ -7,7 +7,7 @@
         "build": "tsc",
         "start": "concurrently \"npm run client\" \"npm run server\"",
         "dev": "ts-node src/index.ts",
-        "client": "ts-node src/client/index.ts",
+        "client": "ts-node src/client/main.ts",
         "server": "ts-node src/server/service.ts"
     },
     "keywords": [],

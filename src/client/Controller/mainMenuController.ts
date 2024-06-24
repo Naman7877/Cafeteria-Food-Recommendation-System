@@ -1,13 +1,14 @@
-import { rl } from '../utils/readline';
-import { register } from './auth';
-import { login } from './auth';
-import { socket } from '../socket';
+import { rl } from '../../utils/readline';
+import { logOut, login, register } from './auth';
 
 export function showMenu() {
     console.log('\nMain Menu :');
-    console.log('1. Register');
-    console.log('2. Login');
-    console.log('3. Exit\n');
+    const mainMenuOperations = [
+        { Operation: '1', Description: 'Register' },
+        { Operation: '2', Description: 'Login' },
+        { Operation: '3', Description: 'LogOut' },
+    ];
+    console.table(mainMenuOperations);
     rl.question('Choose an option: ', option => {
         switch (option) {
             case '1':
@@ -18,7 +19,7 @@ export function showMenu() {
                 break;
             case '3':
                 rl.close();
-                socket.disconnect();
+                logOut();
                 break;
             default:
                 console.log('\nInvalid option');

@@ -1,6 +1,6 @@
-import { rl } from '../utils/readline';
-import { socket } from '../socket';
-import { question } from '../utils/readline';
+import { question, rl } from '../../utils/readline';
+import { socket } from '../../utils/socket';
+import { showMenu } from './mainMenuController';
 
 export function adminOperations() {
     console.log('Admin operations:');
