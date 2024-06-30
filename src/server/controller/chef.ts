@@ -1,10 +1,10 @@
 // src/routes/chef.ts
 import { Socket } from 'socket.io';
 import { IFeedback } from '../../models/FeedBack';
-import { pool } from '../../utils/db';
 import { getTopFoodItems } from '../../Recomendation';
 import { insertNotification } from './insertNotification';
 import { RowDataPacket } from 'mysql2/promise';
+import { pool } from '../../Db/db';
 
 export const handleChefSocketEvents = (socket: Socket) => {
     socket.on('give_feedback', async (data: IFeedback) => {

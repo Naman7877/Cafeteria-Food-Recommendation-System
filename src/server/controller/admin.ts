@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io';
-import { pool } from '../../utils/db';
 import { IMenuItem } from '../../models/menuItem';
 import { insertNotification } from './insertNotification';
+import { pool } from '../../Db/db';
 
 export const handleAdminSocketEvents = (socket: Socket) => {
     socket.on('add_item', async (data: IMenuItem) => {

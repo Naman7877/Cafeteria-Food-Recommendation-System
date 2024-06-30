@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
-import { pool } from '../../utils/db';
 import { rl } from '../../utils/readline';
+import { pool } from '../../Db/db';
 
 const userSockets = new Map<string, Socket>();
 

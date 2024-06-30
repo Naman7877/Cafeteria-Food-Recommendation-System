@@ -1,5 +1,5 @@
-import mysql, { RowDataPacket } from 'mysql2/promise';
-import { pool } from '../utils/db';
+import { RowDataPacket } from 'mysql2/promise';
+import { pool } from '../Db/db';
 
 export class DatabaseService {
     async fetchFeedback(foodId: string): Promise<RowDataPacket[]> {

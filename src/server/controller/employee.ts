@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
-import { pool } from '../../utils/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { pool } from '../../Db/db';
 
 export const handleEmployeeSocketEvents = (socket: Socket) => {
     socket.on('show_rollout', async data => {

@@ -1,9 +1,8 @@
 import { RowDataPacket } from 'mysql2/promise';
 import { IMenuItem } from '../../models/menuItem';
-import { pool } from '../../utils/db';
+import { pool } from '../../Db/db';
 
 export const addItem = async (data: IMenuItem) => {
-    console.log('hiiiiiiiiiiiiiiiiii');
     const connection = await pool.getConnection();
     try {
         const [existingIdRows] = await connection.execute<RowDataPacket[]>(
@@ -18,7 +17,6 @@ export const addItem = async (data: IMenuItem) => {
 
         if (existingIdRows.length > 0 || existingNameRows.length > 0) {
             console.log('Item ID or Item Name already exists ');
-            // throw new Error('Item ID or Item Name already exists');
         }
 
         const [results] = await connection.execute(
