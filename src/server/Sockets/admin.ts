@@ -10,6 +10,7 @@ export const handleAdminSocketEvents = (socket: Socket) => {
             socket.emit('add_item_response', {
                 success: true,
                 message: 'Item added successfully',
+                item: data.name,
             });
             await insertNotification('New item added: ' + data.name);
         } catch (err) {

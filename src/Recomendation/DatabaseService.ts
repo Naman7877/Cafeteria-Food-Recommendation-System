@@ -1,4 +1,3 @@
-// DatabaseService.ts
 import mysql, { RowDataPacket } from 'mysql2/promise';
 import { pool } from '../utils/db';
 
@@ -13,12 +12,21 @@ export class DatabaseService {
         return results;
     }
 
-    async fetchAllFoodIds(menuType: string): Promise<string[]> {
+    async fetchAllFoodIds(menuType?: string): Promise<string[]> {
         const connection = await pool.getConnection();
-        const [results] = await connection.execute<RowDataPacket[]>(
-            'SELECT DISTINCT itemId FROM feedback WHERE mealType = ?',
-            [menuType],
-        );
+        let results;
+
+        if (menuType) {
+            [results] = await connection.execute<RowDataPacket[]>(
+                'SELECT DISTINCT itemId FROM feedback WHERE mealType = ?',
+                [menuType],
+            );
+        } else {
+            [results] = await connection.execute<RowDataPacket[]>(
+                'SELECT DISTINCT itemId FROM feedback',
+            );
+        }
+
         connection.release();
         return results.map((row: any) => row.itemId);
     }

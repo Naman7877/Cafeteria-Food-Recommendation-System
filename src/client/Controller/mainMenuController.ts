@@ -9,7 +9,7 @@ export function showMenu() {
         { Operation: '3', Description: 'LogOut' },
     ];
     console.table(mainMenuOperations);
-    rl.question('Choose an option: ', option => {
+    rl.question('\nChoose an option: ', option => {
         switch (option) {
             case '1':
                 register();

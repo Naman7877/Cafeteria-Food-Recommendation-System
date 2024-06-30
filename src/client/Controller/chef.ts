@@ -7,7 +7,8 @@ export function chefOperations() {
     const chefOperation = [
         { Operation: '1', Description: 'RollOut Menu' },
         { Operation: '2', Description: 'Final Menu' },
-        { Operation: '3', Description: 'LogOut' },
+        { Operation: '3', Description: 'Discart list' },
+        { Operation: '4', Description: 'LogOut' },
     ];
     console.table(chefOperation);
 
@@ -20,6 +21,9 @@ export function chefOperations() {
                 finalMenu();
                 break;
             case '3':
+                discartList();
+                break;
+            case '4':
                 logOut();
                 break;
             default:
@@ -34,6 +38,10 @@ async function rollOut() {
         'RollOut menu for BreakFast, Lunch , Dinner --> ',
     );
     socket.emit('get_recommendation', { menuType });
+}
+
+function discartList() {
+    socket.emit('discartList');
 }
 
 async function finalMenu() {

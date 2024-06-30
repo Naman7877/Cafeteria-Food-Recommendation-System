@@ -30,6 +30,7 @@ export const handleAuthSocketEvents = (socket: Socket) => {
                     message: 'Invalid credentials',
                 });
             }
+            console.log('User logged in successfully!');
         } catch (err) {
             socket.emit('auth_response', {
                 success: false,

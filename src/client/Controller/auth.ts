@@ -35,9 +35,9 @@ socket.on(
         userId: string;
     }) => {
         if (data.success) {
-            console.log('Login successful!');
             socket.emit('user_connected', data.userId);
             if (data.role) {
+                console.log('Login successful as a ', data.role);
                 handleRoleOperations(data.role, data.userId);
             }
         } else {
