@@ -3,6 +3,12 @@ import { IMenuItem } from '../../models/menuItem';
 import { insertNotification } from './insertNotification';
 import { pool } from '../../Db/db';
 
+type ItemType = {
+    id: number;
+    name: string;
+    price: string;
+};
+
 export const handleAdminSocketEvents = (socket: Socket) => {
     socket.on('add_item', async (data: IMenuItem) => {
         try {
@@ -73,10 +79,19 @@ export const handleAdminSocketEvents = (socket: Socket) => {
     socket.on('update_item', async ({ id, name, price }) => {
         try {
             const connection = await pool.getConnection();
-            await connection.execute(
-                'UPDATE menuitem SET name = ?, price = ? WHERE id = ?',
-                [name, price, id],
+            const existingItems = await connection.execute(
+                'SELECT * FROM menuitem WHERE id = ?',
+                [id]
             );
+            console.log(existingItems)
+
+            // const updatedName = (name && name.trim() !== '') ? name : existingItems[0].name;
+            // const updatedPrice = (price !== null && price !== undefined && !isNaN(price)) ? price : existingItem.price;
+
+            // await connection.execute(
+            //     'UPDATE menuitem SET name = ?, price = ? WHERE id = ?',
+            //     [updatedName, updatedPrice, id],
+            // );
             connection.release();
 
             socket.emit('update_item_response', { success: true });

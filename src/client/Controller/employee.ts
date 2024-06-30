@@ -10,7 +10,8 @@ export function employeeOperations(userId: string) {
         { Operation: '3', Description: 'Give Feedback' },
         { Operation: '4', Description: 'View Feedback' },
         { Operation: '5', Description: 'View Notification' },
-        { Operation: '6', Description: 'LogOut' },
+        { Operation: '6', Description: 'Create profile' },
+        { Operation: '7', Description: 'LogOut' },
     ];
     console.table(operations);
     rl.question('Choose an option: ', option => {
@@ -31,12 +32,30 @@ export function employeeOperations(userId: string) {
                 viewNotifications(userId);
                 break;
             case '6':
+                createProfile(userId);
+                break;
+            case '7':
                 logOut();
                 break;
             default:
                 console.log('Invalid option');
                 employeeOperations(userId);
         }
+    });
+}
+
+async function createProfile(userId: string) {
+    const dietPreference = await question('Are you vegetarian, non-vegetarian, or eggetarian?');
+    const spicePreference = await question('Do you prefer low, medium, or high spice levels?');
+    const regionalPreference = await question('Do you prefer North Indian or South Indian food?');
+    const sweetPreference = await question('Do you like sweet foods?');
+
+    socket.emit('create_profile', {
+        userId,
+        dietPreference,
+        spicePreference,
+        regionalPreference,
+        sweetPreference
     });
 }
 
@@ -116,3 +135,14 @@ async function giveFeedbackInput(userId: string) {
     const rating = await question('Item rating ');
     socket.emit('give_feedBack', { itemId: id, feedback, userId, rating });
 }
+
+
+socket.on('create_profile_response', data => {
+    if (data.success) {
+        console.log("Your profile not created\n")
+    } else {
+        console.error(data.message);
+    }
+    employeeOperations(data.userId);
+});
+

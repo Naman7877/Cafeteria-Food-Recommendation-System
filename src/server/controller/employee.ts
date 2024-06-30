@@ -26,6 +26,40 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
         }
     });
 
+    socket.on('create_profile', async (data) => {
+        const { userId, dietPreference, spicePreference, regionalPreference, sweetPreference } = data;
+
+        try {
+            const connection = await pool.getConnection();
+            const [rows] = await connection.execute<RowDataPacket[]>('SELECT * FROM userProfile WHERE userId = ?', [userId]);
+
+            if (rows.length > 0) {
+                await pool.query(
+                    'UPDATE userProfile SET foodType = ?, spiceLevel = ?, foo = ?, rating = ? WHERE userId = ?',
+                    [dietPreference, spicePreference, regionalPreference, sweetPreference, userId]
+                );
+            } else {
+                await pool.query(
+                    'INSERT INTO userProfile (userId, foodType, spiceLevel, preferredFood, likeSweet) VALUES (?, ?, ?, ?, ?)',
+                    [userId, dietPreference, spicePreference, regionalPreference, sweetPreference]
+                );
+            }
+            console.log('Your profile has been created')
+
+            socket.emit('create_profile_response', {
+                success: false,
+                message: 'Your profile has been created',
+                result: data
+            });
+
+        } catch (error) {
+            socket.emit('create_profile_response', {
+                success: false,
+                message: 'Your profile not created',
+            });
+        }
+    });
+
     socket.on('vote_for_menu', async data => {
         const { userId, itemId } = data;
         try {

@@ -45,13 +45,17 @@ export const handleChefSocketEvents = (socket: Socket) => {
     socket.on('discartList', async data => {
         try {
             const canProceed = await canPerformOperation();
-            const lowerItem: any = await getTopFoodItems();
-            console.log(lowerItem);
+            let lowerItem = await getTopFoodItems();
 
             if (!canProceed) {
-                console.log(
-                    'You can only generate a discard list once a month.',
-                );
+                console.log('You can only generate a discard list once a month.');
+                return;
+            }
+
+            lowerItem = lowerItem.filter(item => item.averageRating < 2);
+
+            if (lowerItem.length === 0) {
+                console.log('No items with an average rating less than 2 found.');
                 return;
             }
 
@@ -59,14 +63,18 @@ export const handleChefSocketEvents = (socket: Socket) => {
                 .toISOString()
                 .slice(0, 19)
                 .replace('T', ' ');
-            await pool.execute(
-                'INSERT INTO discardlist (discardItemId, itemId, discardDate) VALUES (?, ?, ?)',
-                [0, lowerItem[0].foodId, dateTime],
-            );
+
+            for (const item of lowerItem) {
+                await pool.execute(
+                    'INSERT INTO discardlist (discardItemId, itemId, discardDate) VALUES (?, ?, ?)',
+                    [0, item.foodId, dateTime],
+                );
+            }
         } catch (error) {
-            console.error('Error fetching top 5 food items:', error);
+            console.error('Error in discard list making:', error);
         }
     });
+
 
     socket.on('finalizedMenu', async data => {
         try {
@@ -91,11 +99,11 @@ export const handleChefSocketEvents = (socket: Socket) => {
                 );
                 await insertNotification(
                     'FinalMenu item: ' +
-                        itemName +
-                        ' with ID ' +
-                        itemId +
-                        ' added to final_menu for date ' +
-                        currentDate,
+                    itemName +
+                    ' with ID ' +
+                    itemId +
+                    ' added to final_menu for date ' +
+                    currentDate,
                 );
             } else {
                 console.log('No items found in rollover table.');
@@ -120,12 +128,14 @@ export async function getLatestDiscardedItem(): Promise<any> {
 
 export async function canPerformOperation(): Promise<boolean> {
     const lastDiscardedItem = await getLatestDiscardedItem();
+    console.log(lastDiscardedItem);
 
     if (lastDiscardedItem) {
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-        const discardedAt = new Date(lastDiscardedItem.discardedAt);
+        const discardedAt = new Date(lastDiscardedItem.discardDate);
+        console.log(discardedAt);
 
         if (discardedAt > oneMonthAgo) {
             return false;
