@@ -81,9 +81,9 @@ export const handleAdminSocketEvents = (socket: Socket) => {
             const connection = await pool.getConnection();
             const existingItems = await connection.execute(
                 'SELECT * FROM menuitem WHERE id = ?',
-                [id]
+                [id],
             );
-            console.log(existingItems)
+            console.log(existingItems);
 
             // const updatedName = (name && name.trim() !== '') ? name : existingItems[0].name;
             // const updatedPrice = (price !== null && price !== undefined && !isNaN(price)) ? price : existingItem.price;

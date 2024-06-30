@@ -48,14 +48,18 @@ export const handleChefSocketEvents = (socket: Socket) => {
             let lowerItem = await getTopFoodItems();
 
             if (!canProceed) {
-                console.log('You can only generate a discard list once a month.');
+                console.log(
+                    'You can only generate a discard list once a month.',
+                );
                 return;
             }
 
             lowerItem = lowerItem.filter(item => item.averageRating < 2);
 
             if (lowerItem.length === 0) {
-                console.log('No items with an average rating less than 2 found.');
+                console.log(
+                    'No items with an average rating less than 2 found.',
+                );
                 return;
             }
 
@@ -74,7 +78,6 @@ export const handleChefSocketEvents = (socket: Socket) => {
             console.error('Error in discard list making:', error);
         }
     });
-
 
     socket.on('finalizedMenu', async data => {
         try {
@@ -99,11 +102,11 @@ export const handleChefSocketEvents = (socket: Socket) => {
                 );
                 await insertNotification(
                     'FinalMenu item: ' +
-                    itemName +
-                    ' with ID ' +
-                    itemId +
-                    ' added to final_menu for date ' +
-                    currentDate,
+                        itemName +
+                        ' with ID ' +
+                        itemId +
+                        ' added to final_menu for date ' +
+                        currentDate,
                 );
             } else {
                 console.log('No items found in rollover table.');

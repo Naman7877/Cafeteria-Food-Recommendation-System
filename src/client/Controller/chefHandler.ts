@@ -1,6 +1,6 @@
 import { question, rl } from '../../utils/readline';
 import { socket } from '../../utils/socket';
-import { logOut } from './auth';
+import { logOut } from './authHandler';
 
 export function chefOperations() {
     console.log('Chef Operations:');

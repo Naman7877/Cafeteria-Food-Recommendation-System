@@ -1,6 +1,6 @@
-import { adminOperations } from './admin';
-import { chefOperations } from './chef';
-import { employeeOperations } from './employee';
+import { adminOperations } from './adminHandler';
+import { chefOperations } from './chefHandler';
+import { employeeOperations } from './employeeHandler';
 import { showMenu } from './mainMenuController';
 
 export function handleRoleOperations(role: string, userId: string) {

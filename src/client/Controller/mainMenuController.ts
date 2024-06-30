@@ -1,5 +1,5 @@
 import { rl } from '../../utils/readline';
-import { logOut, login, register } from './auth';
+import { logOut, login, register } from './authHandler';
 
 export function showMenu() {
     console.log('\nMain Menu :');

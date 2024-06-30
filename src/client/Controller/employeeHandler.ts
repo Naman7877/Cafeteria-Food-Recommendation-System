@@ -1,6 +1,6 @@
 import { question, rl } from '../../utils/readline';
 import { socket } from '../../utils/socket';
-import { logOut } from './auth';
+import { logOut } from './authHandler';
 
 export function employeeOperations(userId: string) {
     console.log('Employee Operations:');
@@ -45,9 +45,15 @@ export function employeeOperations(userId: string) {
 }
 
 async function createProfile(userId: string) {
-    const dietPreference = await question('Are you vegetarian, non-vegetarian, or eggetarian?');
-    const spicePreference = await question('Do you prefer low, medium, or high spice levels?');
-    const regionalPreference = await question('Do you prefer North Indian or South Indian food?');
+    const dietPreference = await question(
+        'Are you vegetarian, non-vegetarian, or eggetarian?',
+    );
+    const spicePreference = await question(
+        'Do you prefer low, medium, or high spice levels?',
+    );
+    const regionalPreference = await question(
+        'Do you prefer North Indian or South Indian food?',
+    );
     const sweetPreference = await question('Do you like sweet foods?');
 
     socket.emit('create_profile', {
@@ -55,7 +61,7 @@ async function createProfile(userId: string) {
         dietPreference,
         spicePreference,
         regionalPreference,
-        sweetPreference
+        sweetPreference,
     });
 }
 
@@ -136,13 +142,11 @@ async function giveFeedbackInput(userId: string) {
     socket.emit('give_feedBack', { itemId: id, feedback, userId, rating });
 }
 
-
 socket.on('create_profile_response', data => {
     if (data.success) {
-        console.log("Your profile not created\n")
+        console.log('Your profile not created\n');
     } else {
         console.error(data.message);
     }
     employeeOperations(data.userId);
 });
-
