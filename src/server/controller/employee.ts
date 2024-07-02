@@ -5,16 +5,103 @@ import { pool } from '../../Db/db';
 export const handleEmployeeSocketEvents = (socket: Socket) => {
     socket.on('show_rollout', async data => {
         const { userId } = data;
+        let connection;
+
         try {
-            const connection = await pool.getConnection();
-            const [results] = await connection.execute(
-                'SELECT * FROM rollover',
+            connection = await pool.getConnection();
+            const [userProfileResults] = await connection.execute<
+                RowDataPacket[]
+            >('SELECT * FROM userProfile WHERE userId = ?', [userId]);
+
+            // if (userProfileResults.length !== 0) {
+            //     socket.emit('view_rollout_response', {
+            //         success: false,
+            //         message: 'User profile not found',
+            //     });
+            //     return;
+            // }
+
+            const userProfile = userProfileResults[0];
+            console.log(userProfile);
+
+            const [rolloutResults] = await connection.execute<RowDataPacket[]>(
+                `SELECT r.*, 
+                    m.dietType, 
+                    m.SpiceLevel,
+                    m.region,
+                    m.sweetDish
+             FROM rollover r
+             JOIN menuitem m ON r.itemId = m.id`,
             );
+
+            console.log(rolloutResults);
+
+            // Sort rollout items based on user profile
+            const sortedRolloutItems = rolloutResults.sort((a, b) => {
+                // Custom sorting logic based on user profile
+
+                // Sort by diet preference
+                if (
+                    a.dietType === userProfile.dietPreference &&
+                    b.dietType !== userProfile.dietPreference
+                ) {
+                    return -1;
+                }
+                if (
+                    a.dietType !== userProfile.dietPreference &&
+                    b.dietType === userProfile.dietPreference
+                ) {
+                    return 1;
+                }
+                // Sort by spice preference
+                if (
+                    a.SpiceLevel === userProfile.spicePreference &&
+                    b.SpiceLevel !== userProfile.spicePreference
+                ) {
+                    return -1;
+                }
+                if (
+                    a.SpiceLevel !== userProfile.spicePreference &&
+                    b.SpiceLevel === userProfile.spicePreference
+                ) {
+                    return 1;
+                }
+                // Sort by region preference
+                if (
+                    a.region === userProfile.preferredRegion &&
+                    b.region !== userProfile.preferredRegion
+                ) {
+                    return -1;
+                }
+                if (
+                    a.region !== userProfile.preferredRegion &&
+                    b.region === userProfile.preferredRegion
+                ) {
+                    return 1;
+                }
+                // Sort by sweet dish preference
+                if (
+                    a.sweetDish === userProfile.likesSweet &&
+                    b.sweetDish !== userProfile.likesSweet
+                ) {
+                    return -1;
+                }
+                if (
+                    a.sweetDish !== userProfile.likesSweet &&
+                    b.sweetDish === userProfile.likesSweet
+                ) {
+                    return 1;
+                }
+
+                return 0;
+            });
+
+            console.log(sortedRolloutItems);
             connection.release();
 
             socket.emit('view_rollout_response', {
                 success: true,
-                rollout: results,
+                rollout: sortedRolloutItems,
                 userId,
             });
         } catch (err) {
@@ -83,6 +170,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
 
     socket.on('vote_for_menu', async data => {
         const { userId, itemId } = data;
+        console.log(data);
         try {
             const connection = await pool.getConnection();
             await connection.beginTransaction();

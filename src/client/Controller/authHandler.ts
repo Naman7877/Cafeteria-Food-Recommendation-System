@@ -1,3 +1,4 @@
+import { IAuthResponse, IAuthenticateData } from '../../models/authInterface';
 import { rl } from '../../utils/readline';
 import { socket } from '../../utils/socket';
 import { showMenu } from './mainMenuController';
@@ -16,7 +17,8 @@ export function register() {
 export function login() {
     rl.question('Enter Employee ID: ', userId => {
         rl.question('Enter Name: ', username => {
-            socket.emit('authenticate', { userId, username });
+            const data: IAuthenticateData = { userId, username };
+            socket.emit('authenticate', data);
         });
     });
 }
@@ -26,35 +28,25 @@ export function logOut() {
     rl.close();
 }
 
-socket.on(
-    'auth_response',
-    (data: {
-        success: boolean;
-        message: string;
-        role?: string;
-        userId: string;
-    }) => {
-        if (data.success) {
-            socket.emit('user_connected', data.userId);
-            if (data.role) {
-                console.log('Login successful as a ', data.role);
-                handleRoleOperations(data.role, data.userId);
-            }
-        } else {
-            console.log('Login failed: ' + data.message);
-            showMenu();
+socket.on('auth_response', (data: IAuthResponse) => {
+    if (data.success) {
+        socket.emit('user_connected', data.userId);
+        if (data.role) {
+            console.log('Login successful as a ', data.role);
+            handleRoleOperations(data.role, data.userId);
         }
-    },
-);
-
-socket.on(
-    'register_response',
-    (data: { success: boolean; message: string; role?: string }) => {
-        if (data.success) {
-            console.log('Registration successful!');
-        } else {
-            console.log('Registration failed: ' + data.message);
-        }
+    } else {
+        console.log('Login failed: ' + data.message);
         showMenu();
-    },
-);
+    }
+});
+
+socket.on('register_response', data => {
+    if (data.success) {
+        console.log('Registration successful!');
+        handleRoleOperations(data.role, data.userId);
+    } else {
+        console.log('Registration failed: ' + data.message);
+        showMenu();
+    }
+});

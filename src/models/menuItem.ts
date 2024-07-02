@@ -4,4 +4,8 @@ export interface IMenuItem {
     price: number;
     availability: boolean;
     mealTime: string;
+    dietType: string;
+    SpiceLevel: string;
+    region: string;
+    sweetDish: string;
 }

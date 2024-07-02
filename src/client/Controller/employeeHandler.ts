@@ -87,7 +87,7 @@ function viewNotifications(userId: string) {
 
 socket.on('view_menu_response', data => {
     if (data.success) {
-        console.log(data.menu);
+        console.table(data.menu);
     } else {
         console.log('Failed to retrieve menu: ' + data.message);
     }
@@ -144,9 +144,31 @@ async function giveFeedbackInput(userId: string) {
 
 socket.on('create_profile_response', data => {
     if (data.success) {
-        console.log('Your profile not created\n');
+        console.log('Your profile is created\n');
     } else {
         console.error(data.message);
     }
     employeeOperations(data.userId);
 });
+
+async function vote(userId: string) {
+    const itemId = await question('Enter Item Id that you want to vote:  ');
+    socket.emit('vote_for_menu', { userId: userId, itemId: itemId });
+}
+
+socket.on(
+    'view_rollout_response',
+    (data: { success: boolean; rollout: any; userId: string }) => {
+        if (data.success) {
+            if (data.rollout) {
+                console.log(
+                    '-----------------Rollout Table Data:---------------------',
+                );
+                console.table(data.rollout);
+                vote(data.userId);
+            }
+        } else {
+            console.error('Rollout data retrieval failed:', data);
+        }
+    },
+);

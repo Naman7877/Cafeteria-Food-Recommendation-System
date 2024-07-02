@@ -7,8 +7,10 @@ export function chefOperations() {
     const chefOperation = [
         { Operation: '1', Description: 'RollOut Menu' },
         { Operation: '2', Description: 'Final Menu' },
-        { Operation: '3', Description: 'Discart list' },
-        { Operation: '4', Description: 'LogOut' },
+        { Operation: '3', Description: 'Discard list' },
+        { Operation: '4', Description: 'view Menu' },
+        { Operation: '5', Description: 'View Feedback' },
+        { Operation: '6', Description: 'LogOut' },
     ];
     console.table(chefOperation);
 
@@ -21,9 +23,15 @@ export function chefOperations() {
                 finalMenu();
                 break;
             case '3':
-                discartList();
+                discardList();
                 break;
             case '4':
+                viewMenu();
+                break;
+            case '5':
+                viewFeedBack();
+                break;
+            case '6':
                 logOut();
                 break;
             default:
@@ -40,8 +48,16 @@ async function rollOut() {
     socket.emit('get_recommendation', { menuType });
 }
 
-function discartList() {
-    socket.emit('discartList');
+function viewMenu() {
+    socket.emit('chef_view_menu');
+}
+
+function viewFeedBack() {
+    socket.emit('chef_view_feedbacks');
+}
+
+function discardList() {
+    socket.emit('discardList');
 }
 
 async function finalMenu() {
@@ -59,3 +75,50 @@ socket.on(
         chefOperations();
     },
 );
+
+socket.on('finalizedMenu_response', response => {
+    if (response.success) {
+        console.log('Success:', response.message);
+    } else {
+        console.log('Failure:', response.message);
+    }
+    chefOperations();
+});
+
+socket.on('chef_view_menu_response', data => {
+    if (data.success) {
+        console.table(data.menu);
+    } else {
+        console.error(data.message);
+    }
+    chefOperations();
+});
+
+socket.on('chef_view_feedbacks_response', data => {
+    if (data.success) {
+        console.table(data.feedbacks);
+        chefOperations();
+    } else {
+        console.log('Failed to retrieve feedbacks: ' + data.message);
+        chefOperations();
+    }
+});
+
+socket.on('chef_view_feedbacks_response', data => {
+    if (data.success) {
+        console.table(data.feedbacks);
+        chefOperations();
+    } else {
+        console.log('Failed to retrieve feedbacks: ' + data.message);
+        chefOperations();
+    }
+});
+
+socket.on('discard_list_response', data => {
+    if (data.success) {
+        console.log(data.message);
+    } else {
+        console.error(data.message);
+    }
+    chefOperations();
+});

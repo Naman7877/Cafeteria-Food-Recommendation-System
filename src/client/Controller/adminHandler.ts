@@ -1,3 +1,4 @@
+import { IMenuItem } from '../../models/menuItem';
 import { question, rl } from '../../utils/readline';
 import { socket } from '../../utils/socket';
 import { printTable } from '../../utils/tableFormat';
@@ -65,9 +66,11 @@ async function updateItem() {
 
     socket.once('check_item_exists_response', async response => {
         if (response.success && response.exists) {
-            const newName = await question('Enter new name for the item: ');
-            const newPrice = await question('Enter new price for the item: ');
-            socket.emit('update_item', { id, name: newName, price: newPrice });
+            const availability = await question('Enter item availability: ');
+            socket.emit('update_item_availability', {
+                id,
+                availability: availability,
+            });
         } else {
             console.log('Item ID not found.');
             adminOperations();
@@ -81,6 +84,10 @@ async function addItem(role: string) {
     const price = await question('Enter price: ');
     const availability = await question('Enter availability: ');
     const mealTime = await question('Enter mealTime: ');
+    const dietType = await question('Enter dietType: ');
+    const SpiceLevel = await question('Enter SpiceLevel: ');
+    const region = await question('Enter region: ');
+    const sweetDish = await question('Enter sweetDish: ');
     socket.emit('add_item', {
         id,
         name,
@@ -88,6 +95,10 @@ async function addItem(role: string) {
         availability,
         role,
         mealTime,
+        dietType,
+        SpiceLevel,
+        region,
+        sweetDish,
     });
 }
 
@@ -95,49 +106,6 @@ async function deleteItem(role: string) {
     const id = await question('Item id ');
     socket.emit('delete_item', { id, role });
 }
-
-async function viewMenu() {
-    socket.emit('view_menu');
-}
-
-socket.on(
-    'view_menu_response',
-    (data: {
-        success: any;
-        menu: {
-            id: any;
-            name: any;
-            price: any;
-            availability: any;
-            rating: any;
-            feedback: any;
-            mealTime: any;
-        }[];
-        message: string;
-    }) => {
-        if (data.success) {
-            console.log('Menu Items:');
-            data.menu.forEach(
-                (item: {
-                    id: any;
-                    name: any;
-                    price: any;
-                    availability: any;
-                    rating: any;
-                    feedback: any;
-                    mealTime: any;
-                }) => {
-                    console.log(
-                        `ID: ${item.id}, Name: ${item.name}, Price: ${item.price}, Availability: ${item.availability}, Rating: ${item.rating}, Feedback: ${item.feedback}, Meal Time: ${item.mealTime}`,
-                    );
-                },
-            );
-        } else {
-            console.log('Failed to retrieve menu: ' + data.message);
-        }
-        adminOperations();
-    },
-);
 
 socket.on('add_item_response', data => {
     if (data.success) {
@@ -189,5 +157,15 @@ socket.on('delete_item_response', data => {
                 }
             },
         );
+    }
+});
+
+socket.on('update_item_response', data => {
+    if (data.success) {
+        console.log('--> Item updated successfully!\n');
+        adminOperations();
+    } else {
+        console.log('--->Failed to update item: ' + data.message);
+        adminOperations();
     }
 });

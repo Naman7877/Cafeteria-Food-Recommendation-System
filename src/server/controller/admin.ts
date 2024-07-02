@@ -1,32 +1,31 @@
 import { Socket } from 'socket.io';
-import { IMenuItem } from '../../models/menuItem';
 import { insertNotification } from './insertNotification';
 import { pool } from '../../Db/db';
-
-type ItemType = {
-    id: number;
-    name: string;
-    price: string;
-};
+import { RowDataPacket } from 'mysql2/promise';
 
 export const handleAdminSocketEvents = (socket: Socket) => {
-    socket.on('add_item', async (data: IMenuItem) => {
+    socket.on('add_item', async data => {
         try {
             const connection = await pool.getConnection();
             const [results] = await connection.execute(
-                'INSERT INTO menuitem (id, name, price, availability, mealTime) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO menuitem (id, name, price, availability, mealTime, dietType, spiceLevel, region, sweetDish ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     data.id,
                     data.name,
                     data.price,
                     data.availability,
                     data.mealTime,
+                    data.dietType,
+                    data.SpiceLevel,
+                    data.region,
+                    data.sweetDish,
                 ],
             );
             connection.release();
             socket.emit('add_item_response', {
                 success: true,
                 message: 'Item added successfully',
+                item: data.name,
             });
             await insertNotification('New item added: ' + data.name);
         } catch (err) {
@@ -41,14 +40,6 @@ export const handleAdminSocketEvents = (socket: Socket) => {
     socket.on('delete_item', async data => {
         const { id, role } = data;
         try {
-            if (role !== 'admin') {
-                socket.emit('add_item_response', {
-                    success: false,
-                    message: 'Unauthorized',
-                });
-                return;
-            }
-
             const connection = await pool.getConnection();
             const [results] = await connection.execute(
                 'DELETE FROM menuitem WHERE id = ?',
@@ -76,32 +67,38 @@ export const handleAdminSocketEvents = (socket: Socket) => {
         }
     });
 
-    socket.on('update_item', async ({ id, name, price }) => {
+    socket.on('update_item_availability', async ({ id, availability }) => {
         try {
             const connection = await pool.getConnection();
-            const existingItems = await connection.execute(
+
+            const [existingItems] = await connection.execute<RowDataPacket[]>(
                 'SELECT * FROM menuitem WHERE id = ?',
                 [id],
             );
-            console.log(existingItems);
 
-            // const updatedName = (name && name.trim() !== '') ? name : existingItems[0].name;
-            // const updatedPrice = (price !== null && price !== undefined && !isNaN(price)) ? price : existingItem.price;
+            if (existingItems.length === 0) {
+                connection.release();
+                socket.emit('update_item_response', {
+                    success: false,
+                    message: 'Item not found',
+                });
+                return;
+            }
 
-            // await connection.execute(
-            //     'UPDATE menuitem SET name = ?, price = ? WHERE id = ?',
-            //     [updatedName, updatedPrice, id],
-            // );
+            await connection.execute(
+                'UPDATE menuitem SET availability = ? WHERE id = ?',
+                [availability, id],
+            );
             connection.release();
-
             socket.emit('update_item_response', { success: true });
-            await insertNotification('New item added: ' + name);
+            await insertNotification('Item availability updated: ' + id);
+            console.log('\n----->Item availability updated\n');
         } catch (err) {
             socket.emit('update_item_response', {
                 success: false,
                 message: 'Database error',
             });
-            console.error('Database query error', err);
+            console.error('\nDatabase query error', err);
         }
     });
 };

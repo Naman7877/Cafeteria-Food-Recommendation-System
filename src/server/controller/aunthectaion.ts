@@ -53,6 +53,7 @@ export const handleAuthSocketEvents = (socket: Socket) => {
                 success: true,
                 message: 'Authentication successful',
                 role: role,
+                userId: employeeId,
             });
         } catch (err) {
             socket.emit('register_response', {
