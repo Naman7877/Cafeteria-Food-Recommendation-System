@@ -68,7 +68,7 @@ socket.on(
     'get_recommendation_response',
     (data: { success: boolean; rolloutMenu: any; message: string }) => {
         if (data.success) {
-            console.log(data.message)
+            console.log(data.message);
             console.table(data.rolloutMenu);
         } else {
             console.error(data.message);

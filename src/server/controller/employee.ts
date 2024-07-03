@@ -19,8 +19,8 @@
 //                 console.log(userProfile);
 
 //                 const [rolloutResults] = await connection.execute<RowDataPacket[]>(
-//                     `SELECT r.*, 
-//                     m.dietType, 
+//                     `SELECT r.*,
+//                     m.dietType,
 //                     m.SpiceLevel,
 //                     m.region,
 //                     m.sweetDish
@@ -450,7 +450,7 @@ import {
     handleGiveFeedback,
     handleViewFeedbacks,
     handleShowFinalList,
-    handleViewNotification
+    handleViewNotification,
 } from '../Sockets/EmployeeSocketHandler';
 
 export const handleEmployeeSocketEvents = (socket: Socket) => {
@@ -462,5 +462,7 @@ export const handleEmployeeSocketEvents = (socket: Socket) => {
     socket.on('give_feedBack', data => handleGiveFeedback(socket, data));
     socket.on('view_feedbacks', data => handleViewFeedbacks(socket, data));
     socket.on('show_finalList', data => handleShowFinalList(socket, data));
-    socket.on('view_notification', data => handleViewNotification(socket, data));
+    socket.on('view_notification', data =>
+        handleViewNotification(socket, data),
+    );
 };

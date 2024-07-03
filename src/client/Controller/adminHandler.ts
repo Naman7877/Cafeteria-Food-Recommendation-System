@@ -83,7 +83,9 @@ export async function addItem(role: string) {
     const name = await question('Enter Name: ');
     const price = await question('Enter price: ');
     const availability = await question('Enter availability: ');
-    const mealTime = await question('Enter mealTime (Breakfast/Lunch/Dinner): ');
+    const mealTime = await question(
+        'Enter mealTime (Breakfast/Lunch/Dinner): ',
+    );
     const dietType = await question('Enter dietType (veg/non-veg): ');
     const spiceLevel = await question('Enter SpiceLevel (Low/Medium/High): ');
     const region = await question('Enter region (north/south): ');
@@ -120,35 +122,44 @@ export const handleAddItem = (socket: Socket) => (data: any) => {
         });
     } else {
         console.log('\n****Failed to add item: ' + data.message);
-        rl.question('\nDo you want to try again to add Item ? (yes/no): ', answer => {
-            if (answer.toLowerCase() === 'yes') {
-                addItem('admin');
-            } else {
-                adminOperations();
-            }
-        });
+        rl.question(
+            '\nDo you want to try again to add Item ? (yes/no): ',
+            answer => {
+                if (answer.toLowerCase() === 'yes') {
+                    addItem('admin');
+                } else {
+                    adminOperations();
+                }
+            },
+        );
     }
 };
 
 export const handleDeleteItem = (socket: Socket) => (data: any) => {
     if (data.success) {
         console.log('****Item deleted successfully!');
-        rl.question('Do you want to delete another item? (yes/no): ', answer => {
-            if (answer.toLowerCase() === 'yes') {
-                deleteItem('admin');
-            } else {
-                adminOperations();
-            }
-        });
+        rl.question(
+            'Do you want to delete another item? (yes/no): ',
+            answer => {
+                if (answer.toLowerCase() === 'yes') {
+                    deleteItem('admin');
+                } else {
+                    adminOperations();
+                }
+            },
+        );
     } else {
         console.log('****Failed to delete item: ' + data.message);
-        rl.question('Do you want to try again to delete Item ? (yes/no): ', answer => {
-            if (answer.toLowerCase() === 'yes') {
-                deleteItem('admin');
-            } else {
-                adminOperations();
-            }
-        });
+        rl.question(
+            'Do you want to try again to delete Item ? (yes/no): ',
+            answer => {
+                if (answer.toLowerCase() === 'yes') {
+                    deleteItem('admin');
+                } else {
+                    adminOperations();
+                }
+            },
+        );
     }
 };
 
@@ -162,15 +173,16 @@ export const handleUpdateItem = (socket: Socket) => (data: any) => {
     }
 };
 
-export const handleCheckItemExists = (socket: Socket) => async (response: any) => {
-    if (response.success && response.exists) {
-        const availability = await question('Enter item availability: ');
-        socket.emit('update_item_availability', {
-            id: response.id,
-            availability: availability,
-        });
-    } else {
-        console.log('Item ID not found.');
-        adminOperations();
-    }
-};
+export const handleCheckItemExists =
+    (socket: Socket) => async (response: any) => {
+        if (response.success && response.exists) {
+            const availability = await question('Enter item availability: ');
+            socket.emit('update_item_availability', {
+                id: response.id,
+                availability: availability,
+            });
+        } else {
+            console.log('Item ID not found.');
+            adminOperations();
+        }
+    };

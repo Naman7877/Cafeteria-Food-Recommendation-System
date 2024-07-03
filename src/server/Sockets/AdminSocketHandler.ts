@@ -1,9 +1,16 @@
 import { Socket } from 'socket.io';
 import { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import { getConnection, releaseConnection } from '../../utils/connectionManager';
+import {
+    getConnection,
+    releaseConnection,
+} from '../../utils/connectionManager';
 import { insertNotification } from '../controller/insertNotification';
 
-export const addItem = async (socket: Socket, data: any, connection: PoolConnection) => {
+export const addItem = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     try {
         const [results] = await connection.execute(
             'INSERT INTO menuitem (id, name, price, availability, mealTime, dietType, spiceLevel, region, sweetDish) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -17,7 +24,7 @@ export const addItem = async (socket: Socket, data: any, connection: PoolConnect
                 data.spiceLevel,
                 data.region,
                 data.sweetDish,
-            ]
+            ],
         );
         socket.emit('add_item_response', {
             success: true,
@@ -34,12 +41,16 @@ export const addItem = async (socket: Socket, data: any, connection: PoolConnect
     }
 };
 
-export const deleteItem = async (socket: Socket, data: any, connection: PoolConnection) => {
+export const deleteItem = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { id } = data;
     try {
         const [results] = await connection.execute(
             'DELETE FROM menuitem WHERE id = ?',
-            [id]
+            [id],
         );
 
         if ((results as any).affectedRows > 0) {
@@ -62,12 +73,16 @@ export const deleteItem = async (socket: Socket, data: any, connection: PoolConn
     }
 };
 
-export const updateItemAvailability = async (socket: Socket, data: any, connection: PoolConnection) => {
+export const updateItemAvailability = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { id, availability } = data;
     try {
         const [existingItems] = await connection.execute<RowDataPacket[]>(
             'SELECT * FROM menuitem WHERE id = ?',
-            [id]
+            [id],
         );
 
         if (existingItems.length === 0) {
@@ -80,7 +95,7 @@ export const updateItemAvailability = async (socket: Socket, data: any, connecti
 
         await connection.execute(
             'UPDATE menuitem SET availability = ? WHERE id = ?',
-            [availability, id]
+            [availability, id],
         );
         socket.emit('update_item_response', { success: true });
         await insertNotification('Item availability updated: ' + id);
