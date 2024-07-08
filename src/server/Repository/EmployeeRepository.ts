@@ -1,13 +1,14 @@
 import { Socket } from 'socket.io';
-import { RowDataPacket } from 'mysql2/promise';
+import { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import { pool } from '../../Db/db';
 
-export const handleShowRollout = async (socket: Socket, data: any) => {
+export const handleShowRollout = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { userId } = data;
-    let connection;
-
     try {
-        connection = await pool.getConnection();
         const [userProfileResults] = await connection.execute<RowDataPacket[]>(
             'SELECT * FROM userProfile WHERE userId = ?',
             [userId],
@@ -98,7 +99,11 @@ export const handleShowRollout = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleCreateProfile = async (socket: Socket, data: any) => {
+export const handleCreateProfile = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const {
         userId,
         dietPreference,
@@ -108,7 +113,6 @@ export const handleCreateProfile = async (socket: Socket, data: any) => {
     } = data;
 
     try {
-        const connection = await pool.getConnection();
         const [rows] = await connection.execute<RowDataPacket[]>(
             'SELECT * FROM userProfile WHERE userId = ?',
             [userId],
@@ -153,7 +157,11 @@ export const handleCreateProfile = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleVoteForMenu = async (socket: Socket, data: any) => {
+export const handleVoteForMenu = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { userId, itemId } = data;
     console.log(data);
     try {
@@ -206,9 +214,11 @@ export const handleVoteForMenu = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleViewMenu = async (socket: Socket) => {
+export const handleViewMenu = async (
+    socket: Socket,
+    connection: PoolConnection,
+) => {
     try {
-        const connection = await pool.getConnection();
         const [results] = await connection.execute('SELECT * FROM menuitem');
         connection.release();
 
@@ -222,10 +232,13 @@ export const handleViewMenu = async (socket: Socket) => {
     }
 };
 
-export const handleCheckItemExists = async (socket: Socket, data: any) => {
+export const handleCheckItemExists = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { id } = data;
     try {
-        const connection = await pool.getConnection();
         const [results]: any = await connection.execute(
             'SELECT COUNT(*) as count FROM menuitem WHERE id = ?',
             [id],
@@ -246,12 +259,13 @@ export const handleCheckItemExists = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleGiveFeedback = async (socket: Socket, data: any) => {
+export const handleGiveFeedback = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { itemId, feedback, userId, rating } = data;
-    console.log(itemId, feedback, userId, rating);
     try {
-        const connection = await pool.getConnection();
-
         const [rows] = await connection.execute<RowDataPacket[]>(
             'SELECT * FROM menuitem WHERE id = ?',
             [itemId],
@@ -285,10 +299,13 @@ export const handleGiveFeedback = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleViewFeedbacks = async (socket: Socket, data: any) => {
+export const handleViewFeedbacks = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { userId } = data;
     try {
-        const connection = await pool.getConnection();
         const [results] = await connection.execute('SELECT * FROM Feedback');
         connection.release();
 
@@ -306,12 +323,15 @@ export const handleViewFeedbacks = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleShowFinalList = async (socket: Socket, data: any) => {
+export const handleShowFinalList = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { userId } = data;
     const today = new Date().toISOString().split('T')[0];
 
     try {
-        const connection = await pool.getConnection();
         const [results] = await connection.execute<RowDataPacket[]>(
             'SELECT * FROM final_menu WHERE finalizedDate = ?',
             [today],
@@ -340,16 +360,105 @@ export const handleShowFinalList = async (socket: Socket, data: any) => {
     }
 };
 
-export const handleViewNotification = async (socket: Socket, data: any) => {
+export const handleViewDiscardList = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+        const [results] = await connection.execute<RowDataPacket[]>(
+            `SELECT d.*, m.name AS itemName
+             FROM discardlist d
+             JOIN menuitem m ON d.itemId = m.id`,
+        );
+        connection.release();
+
+        console.log(results);
+
+        if (results.length <= 0) {
+            socket.emit('show_discard_response', {
+                success: true,
+                discardList: results,
+                userId: data.userId,
+            });
+        }
+
+        socket.emit('show_discard_response', {
+            success: true,
+            discardList: results,
+            userId: data.userId,
+        });
+    } catch (err) {
+        socket.emit('show_discard_response', {
+            success: false,
+            message: 'Database error',
+        });
+        console.error('Database query error', err);
+    }
+};
+
+export const handleGiveRecipe = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
+    const { id, dislikeReason, tasteExpectations, message } = data;
+
+    try {
+        const [discardResults] = await connection.execute<RowDataPacket[]>(
+            `SELECT d.*, m.name AS itemName, m.mealTime
+             FROM discardlist d
+             JOIN menuitem m ON d.itemId = m.id
+             WHERE d.itemId = ?`,
+            [id],
+        );
+
+        if (discardResults.length <= 0) {
+            connection.release();
+            socket.emit('give_discardItem_feedback_response', {
+                success: false,
+                message: 'Item ID not found in discard list',
+            });
+            return;
+        }
+
+        const menuItem = discardResults[0];
+
+        await connection.execute(
+            `INSERT INTO discardlistitemfeedback (itemId, dislikeReason, tasteExpectations, \`mom'sRecipe\`) VALUES (?, ?, ?, ?)`,
+            [id, dislikeReason, tasteExpectations, message],
+        );
+
+        connection.release();
+
+        socket.emit('give_discardItem_feedback_response', {
+            success: true,
+            message:
+                'Message, feedback, and rating stored in feedback table successfully',
+            discardList: discardResults,
+        });
+    } catch (err) {
+        socket.emit('give_discardItem_feedback_response', {
+            success: false,
+            message: 'Database error',
+        });
+        console.error('Database query error', err);
+    }
+};
+
+export const handleViewNotification = async (
+    socket: Socket,
+    data: any,
+    connection: PoolConnection,
+) => {
     const { userId } = data;
-    console.log(userId);
     try {
         const lastNotificationId = await getLastNotificationId(userId);
         const notifications = await getNotifications(
             lastNotificationId ?? undefined,
         );
 
-        const connection = await pool.getConnection();
         if (notifications.length > 0) {
             const latestNotificationId = notifications[0].notificationId;
             console.log(latestNotificationId);

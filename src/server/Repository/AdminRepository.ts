@@ -1,10 +1,6 @@
 import { Socket } from 'socket.io';
 import { PoolConnection, RowDataPacket } from 'mysql2/promise';
-import {
-    getConnection,
-    releaseConnection,
-} from '../../utils/connectionManager';
-import { insertNotification } from '../controller/insertNotification';
+import { insertNotification } from '../Services/insertNotification';
 
 export const addItem = async (
     socket: Socket,

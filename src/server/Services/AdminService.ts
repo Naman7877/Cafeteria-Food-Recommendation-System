@@ -3,7 +3,7 @@ import {
     addItem,
     deleteItem,
     updateItemAvailability,
-} from '../Sockets/AdminSocketHandler';
+} from '../Repository/AdminRepository';
 import { getConnection } from '../../utils/connectionManager';
 
 export const handleAdminSocketEvents = (socket: Socket) => {

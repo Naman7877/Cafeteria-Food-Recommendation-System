@@ -8,9 +8,11 @@ export function chefOperations() {
         { Operation: '1', Description: 'RollOut Menu' },
         { Operation: '2', Description: 'Final Menu' },
         { Operation: '3', Description: 'Discard list' },
+        { Operation: '3', Description: 'Modify Discard list' },
         { Operation: '4', Description: 'view Menu' },
         { Operation: '5', Description: 'View Feedback' },
-        { Operation: '6', Description: 'LogOut' },
+        { Operation: '6', Description: 'Modify Discard list' },
+        { Operation: '7', Description: 'LogOut' },
     ];
     console.table(chefOperation);
 
@@ -32,6 +34,9 @@ export function chefOperations() {
                 viewFeedBack();
                 break;
             case '6':
+                modifyDiscardList();
+                break;
+            case '7':
                 logOut();
                 break;
             default:
@@ -46,6 +51,22 @@ async function rollOut() {
         'RollOut menu for BreakFast, Lunch , Dinner --> ',
     );
     socket.emit('get_recommendation', { menuType });
+}
+
+async function modifyDiscardList() {
+    const choice = await question(
+        'Do you want to delete from menu or discard list? (menu/discard) ',
+    );
+    const id = await question(
+        'Enter the ID of the item for the above operation: ',
+    );
+
+    if (choice === 'menu' || choice === 'discard') {
+        socket.emit('modify_discard_list', { choice, itemId: id });
+    } else {
+        console.log('Invalid choice. Please enter "menu" or "discard".');
+        await modifyDiscardList();
+    }
 }
 
 function viewMenu() {
@@ -120,6 +141,15 @@ socket.on('discard_list_response', data => {
         console.log(data.message);
     } else {
         console.error(data.message);
+    }
+    chefOperations();
+});
+
+socket.on('modify_discard_list_response', data => {
+    if (data.success) {
+        console.log(data.message);
+    } else {
+        console.log('Failed to modify item: ' + data.message);
     }
     chefOperations();
 });

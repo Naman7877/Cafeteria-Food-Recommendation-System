@@ -10,7 +10,8 @@ import {
     finalizedMenu,
     chefViewMenu,
     chefViewFeedbacks,
-} from '../Sockets/ChefSocketHandler';
+    modifyDiscardList,
+} from '../Repository/ChefRepository';
 
 export const handleChefSocketEvents = (socket: Socket) => {
     getConnection()
@@ -26,6 +27,9 @@ export const handleChefSocketEvents = (socket: Socket) => {
                 finalizedMenu(socket, connection),
             );
             socket.on('chef_view_menu', () => chefViewMenu(socket, connection));
+            socket.on('modify_discard_list', data =>
+                modifyDiscardList(socket, connection, data),
+            );
             socket.on('chef_view_feedbacks', () =>
                 chefViewFeedbacks(socket, connection),
             );

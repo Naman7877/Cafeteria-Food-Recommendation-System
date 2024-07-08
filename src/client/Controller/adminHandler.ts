@@ -1,4 +1,3 @@
-import { Socket } from 'socket.io';
 import { question, rl } from '../../utils/readline';
 import { socket } from '../../utils/socket';
 import { printTable } from '../../utils/tableFormat';
@@ -60,7 +59,7 @@ function modifyMenu() {
     });
 }
 
-export async function updateItem() {
+async function updateItem() {
     const id = await question('Enter item Id that will be updated');
     socket.emit('check_item_exists', { id });
 
@@ -104,13 +103,12 @@ export async function addItem(role: string) {
     });
 }
 
-export async function deleteItem(role: string) {
+async function deleteItem(role: string) {
     const id = await question('Item id ');
     socket.emit('delete_item', { id, role });
 }
 
-// Event Handlers
-export const handleAddItem = (socket: Socket) => (data: any) => {
+socket.on('add_item_response', data => {
     if (data.success) {
         console.log(`\n****${data.item} added successfully`);
         rl.question('\nDo you want to add another item? (yes/no): ', answer => {
@@ -133,9 +131,9 @@ export const handleAddItem = (socket: Socket) => (data: any) => {
             },
         );
     }
-};
+});
 
-export const handleDeleteItem = (socket: Socket) => (data: any) => {
+socket.on('delete_item_response', data => {
     if (data.success) {
         console.log('****Item deleted successfully!');
         rl.question(
@@ -161,9 +159,9 @@ export const handleDeleteItem = (socket: Socket) => (data: any) => {
             },
         );
     }
-};
+});
 
-export const handleUpdateItem = (socket: Socket) => (data: any) => {
+socket.on('update_item_response', data => {
     if (data.success) {
         console.log('--> Item updated successfully!\n');
         adminOperations();
@@ -171,18 +169,4 @@ export const handleUpdateItem = (socket: Socket) => (data: any) => {
         console.log('--->Failed to update item: ' + data.message);
         adminOperations();
     }
-};
-
-export const handleCheckItemExists =
-    (socket: Socket) => async (response: any) => {
-        if (response.success && response.exists) {
-            const availability = await question('Enter item availability: ');
-            socket.emit('update_item_availability', {
-                id: response.id,
-                availability: availability,
-            });
-        } else {
-            console.log('Item ID not found.');
-            adminOperations();
-        }
-    };
+});

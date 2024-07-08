@@ -10,7 +10,7 @@ import {
     handleLogout,
     handleUserConnected,
     registerUser,
-} from '../Sockets/AuthSocketHandler';
+} from '../Repository/AuthRepository';
 
 const userSockets = new Map<string, Socket>();
 

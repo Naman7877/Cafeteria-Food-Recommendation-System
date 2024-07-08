@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import { FieldPacket, RowDataPacket } from 'mysql2/promise';
 import { getTopFoodItems } from '../../Recomendation';
 import { canPerformOperation } from '../CommonFunction';
-import { insertNotification } from '../controller/insertNotification';
+import { insertNotification } from '../Services/insertNotification';
 
 export const giveFeedback = async (
     socket: Socket,
@@ -105,13 +105,17 @@ export const discardList = async (socket: Socket, connection: any) => {
             .replace('T', ' ');
 
         for (const item of lowerItem) {
-            await connection.execute(
-                'INSERT INTO discardlist (discardItemId, itemId, discardDate) VALUES (?, ?, ?)',
-                [0, item.foodId, dateTime],
+            const [existingItems] = await connection.execute(
+                'SELECT COUNT(*) AS count FROM discardlist WHERE itemId = ?',
+                [item.foodId],
             );
-            await connection.execute('DELETE FROM menuitem WHERE id = ?', [
-                item.foodId,
-            ]);
+
+            if (existingItems[0].count === 0) {
+                await connection.execute(
+                    'INSERT INTO discardlist (discardItemId, itemId, discardDate) VALUES (?, ?, ?)',
+                    [0, item.foodId, dateTime],
+                );
+            }
         }
 
         console.log('Discard list generated successfully.');
@@ -124,6 +128,71 @@ export const discardList = async (socket: Socket, connection: any) => {
         socket.emit('discard_list_response', {
             success: false,
             message: 'Error in discard list making.',
+        });
+    }
+};
+
+export const modifyDiscardList = async (
+    socket: Socket,
+    connection: any,
+    data: any,
+) => {
+    const { choice, itemId } = data;
+    try {
+        const [discardResults] = await connection.execute(
+            'SELECT * FROM discardlist WHERE itemId = ?',
+            [itemId],
+        );
+
+        if (discardResults.length === 0) {
+            socket.emit('modify_discard_list_response', {
+                success: false,
+                message: 'Item not found in discard list.',
+            });
+            return;
+        }
+
+        if (choice === 'menu') {
+            await connection.beginTransaction();
+
+            await connection.execute(
+                'DELETE FROM discardlist WHERE itemId = ?',
+                [itemId],
+            );
+
+            await connection.execute('DELETE FROM menuitem WHERE id = ?', [
+                itemId,
+            ]);
+
+            socket.emit('modify_discard_list_response', {
+                success: true,
+                message:
+                    'Item successfully deleted from menu and discard list.',
+            });
+        } else if (choice === 'discard') {
+            await connection.execute(
+                'DELETE FROM discardlist WHERE itemId = ?',
+                [itemId],
+            );
+
+            socket.emit('modify_discard_list_response', {
+                success: true,
+                message: 'Item successfully deleted from discard list.',
+            });
+        } else {
+            socket.emit('modify_discard_list_response', {
+                success: false,
+                message: 'Invalid choice.',
+            });
+        }
+    } catch (error) {
+        console.error('Error modifying item:', error);
+
+        if (connection && choice === 'menu') await connection.rollback();
+
+        socket.emit('modify_discard_list_response', {
+            success: false,
+            message: 'Failed to modify item.',
         });
     }
 };

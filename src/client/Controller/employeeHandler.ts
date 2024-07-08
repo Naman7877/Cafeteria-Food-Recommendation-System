@@ -10,8 +10,9 @@ export function employeeOperations(userId: string) {
         { Operation: '3', Description: 'Give Feedback' },
         { Operation: '4', Description: 'View Feedback' },
         { Operation: '5', Description: 'View Notification' },
-        { Operation: '6', Description: 'Create profile' },
-        { Operation: '7', Description: 'LogOut' },
+        { Operation: '6', Description: "Give Mom's Recipe" },
+        { Operation: '7', Description: 'Create profile' },
+        { Operation: '8', Description: 'LogOut' },
     ];
     console.table(operations);
     rl.question('Choose an option: ', option => {
@@ -32,9 +33,12 @@ export function employeeOperations(userId: string) {
                 viewNotifications(userId);
                 break;
             case '6':
-                createProfile(userId);
+                giveMomsRecipe(userId);
                 break;
             case '7':
+                createProfile(userId);
+                break;
+            case '8':
                 logOut();
                 break;
             default:
@@ -69,6 +73,10 @@ function viewMenu() {
     socket.emit('view_menu');
 }
 
+function giveMomsRecipe(userId: string) {
+    socket.emit('show_discard', { userId: userId });
+}
+
 function voteForMenu(userId: string) {
     socket.emit('show_rollout', { userId: userId });
 }
@@ -79,6 +87,24 @@ function giveFeedback(userId: string) {
 
 function viewFeedbacks(userId: string) {
     socket.emit('view_feedbacks', { userId: userId });
+}
+
+async function giveMomsRecipes(userId: string) {
+    const id = await question('Enter Id that you want to give moms recipe? ');
+    const dislikeReason = await question(
+        'What didn’t you like about <Food Item>? ',
+    );
+    const tasteExpectations = await question(
+        'How would you like <Food Item> to taste? ',
+    );
+    const message = await question('Share your mom’s recipe');
+    socket.emit('give_recipe', {
+        userId: userId,
+        id: id,
+        dislikeReason: dislikeReason,
+        tasteExpectations: tasteExpectations,
+        message: message,
+    });
 }
 
 function viewNotifications(userId: string) {
@@ -170,5 +196,38 @@ socket.on(
         } else {
             console.error('Rollout data retrieval failed:', data);
         }
+    },
+);
+
+socket.on(
+    'show_discard_response',
+    (data: { success: boolean; discardList: any; userId: string }) => {
+        if (data.success) {
+            if (data.discardList) {
+                console.log(
+                    '-----------------Discard Table Data:---------------------',
+                );
+                console.table(data.discardList);
+                giveMomsRecipes(data.userId);
+            }
+        } else {
+            console.error('Rollout data retrieval failed:', data);
+        }
+    },
+);
+
+socket.on(
+    'show_discard_response',
+    (data: { success: boolean; discardList: any; userId: string }) => {
+        if (data.success) {
+            if (data.discardList) {
+                console.log(
+                    'Feedback is successfully added for discarded item',
+                );
+            }
+        } else {
+            console.error('Feedback is failed', data);
+        }
+        employeeOperations(data.userId);
     },
 );

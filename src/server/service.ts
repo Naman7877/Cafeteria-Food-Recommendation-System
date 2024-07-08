@@ -1,11 +1,10 @@
-// src/server.ts
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import { handleAdminSocketEvents } from './controller/admin';
-import { handleEmployeeSocketEvents } from './controller/employee';
-import { handleChefSocketEvents } from './controller/chef';
-import { handleAuthSocketEvents } from './controller/aunthectaion';
+// import { handleAdminSocketEvents } from './Services/AdminService';
+import { handleEmployeeSocketEvents } from './Services/EmployeeService';
+import { handleChefSocketEvents } from './Services/ChefService';
+import { handleAuthSocketEvents } from './Services/AuthService';
 
 const app = express();
 const server = http.createServer(app);
@@ -13,7 +12,7 @@ const io = new Server(server);
 
 io.on('connection', socket => {
     handleAuthSocketEvents(socket);
-    handleAdminSocketEvents(socket);
+    handleAuthSocketEvents(socket);
     handleEmployeeSocketEvents(socket);
     handleChefSocketEvents(socket);
 });
