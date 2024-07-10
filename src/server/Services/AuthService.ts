@@ -4,38 +4,35 @@ import {
     getConnection,
     releaseConnection,
 } from '../../utils/connectionManager';
-import {
-    activityTracker,
-    authenticateUser,
-    handleLogout,
-    handleUserConnected,
-    registerUser,
-} from '../Repository/AuthRepository';
-
-const userSockets = new Map<string, Socket>();
+import { AuthRepository, UserConnectionManager } from '../Repository/AuthRepository';
 
 export const handleAuthSocketEvents = (socket: Socket) => {
     getConnection()
         .then(connection => {
+            const authRepository = new AuthRepository(connection);
+            const userConnectionManager = new UserConnectionManager();
+
             socket.on('authenticate', data =>
-                authenticateUser(socket, connection, data, (userId, action) =>
-                    activityTracker(connection, userId, action),
+                authRepository.authenticateUser(socket, data, (userId, action) =>
+                    authRepository.activityTracker(userId, action),
                 ),
             );
+
             socket.on('register', data =>
-                registerUser(socket, connection, data),
+                authRepository.registerUser(socket, data),
             );
+
             socket.on('user_connected', userId =>
-                handleUserConnected(socket, userSockets, userId),
+                userConnectionManager.handleUserConnected(socket, userId),
             );
+
             socket.on('logout', () =>
-                handleLogout(
+                userConnectionManager.handleLogout(
                     socket,
-                    userSockets,
                     releaseConnection,
                     rl,
                     (userId, action) =>
-                        activityTracker(connection, userId, action),
+                        authRepository.activityTracker(userId, action),
                 ),
             );
         })

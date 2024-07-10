@@ -1,19 +1,19 @@
-import { adminOperations } from './adminHandler';
-import { chefOperations } from './chefHandler';
-import { employeeOperations } from './employeeHandler';
+import adminOperationsInstance from './adminHandler';
+import chefOperationsInstance from './chefHandler';
+import employeeOperationsInstance from './employeeHandler';
 import { showMenu } from './mainMenuController';
 
 export function handleRoleOperations(role: string, userId: string) {
     console.log(`\nWelcome, ${role}`);
     switch (role) {
         case 'admin':
-            adminOperations();
+            adminOperationsInstance.showMenu();
             break;
         case 'employee':
-            employeeOperations(userId);
+            employeeOperationsInstance(userId).showMenu();
             break;
         case 'chef':
-            chefOperations();
+            chefOperationsInstance.showMenu();
             break;
         default:
             console.log('No operations defined for this role.');

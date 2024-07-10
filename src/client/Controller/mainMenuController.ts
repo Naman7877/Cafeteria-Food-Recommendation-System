@@ -1,5 +1,5 @@
 import { rl } from '../../utils/readline';
-import { logOut, login, register } from './authHandler';
+import authService from './authHandler'; 
 
 export function showMenu() {
     console.log('\nMain Menu :');
@@ -9,17 +9,16 @@ export function showMenu() {
         { Operation: '3', Description: 'LogOut' },
     ];
     console.table(mainMenuOperations);
-    rl.question('\nChoose an option: ', option => {
+    rl.question('\nChoose an option: ', (option) => {
         switch (option) {
             case '1':
-                register();
+                authService.register();
                 break;
             case '2':
-                login();
+                authService.login();
                 break;
             case '3':
-                rl.close();
-                logOut();
+                authService.logOut();
                 break;
             default:
                 console.log('\nInvalid option');

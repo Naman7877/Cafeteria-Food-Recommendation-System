@@ -1,37 +1,42 @@
 import { Socket } from 'socket.io';
+import { rl } from '../../utils/readline';
 import {
     getConnection,
     releaseConnection,
 } from '../../utils/connectionManager';
-import {
-    giveFeedback,
-    getRecommendation,
-    discardList,
-    finalizedMenu,
-    chefViewMenu,
-    chefViewFeedbacks,
-    modifyDiscardList,
-} from '../Repository/ChefRepository';
+import { ChefRepository } from '../Repository/ChefRepository';
 
-export const handleChefSocketEvents = (socket: Socket) => {
+export const handChefSocketEvents = (socket: Socket) => {
     getConnection()
         .then(connection => {
+            const feedbackRepository = new ChefRepository(connection);
+
             socket.on('give_feedback', data =>
-                giveFeedback(socket, connection, data),
+                feedbackRepository.giveFeedback(socket, data),
             );
+
             socket.on('get_recommendation', data =>
-                getRecommendation(socket, connection, data),
+                feedbackRepository.getRecommendation(socket, data),
             );
-            socket.on('discardList', data => discardList(socket, connection));
-            socket.on('finalizedMenu', data =>
-                finalizedMenu(socket, connection),
+
+            socket.on('discard_list', () =>
+                feedbackRepository.discardList(socket),
             );
-            socket.on('chef_view_menu', () => chefViewMenu(socket, connection));
+
             socket.on('modify_discard_list', data =>
-                modifyDiscardList(socket, connection, data),
+                feedbackRepository.modifyDiscardList(socket, data),
             );
+
+            socket.on('finalized_menu', () =>
+                feedbackRepository.finalizedMenu(socket),
+            );
+
+            socket.on('chef_view_menu', () =>
+                feedbackRepository.chefViewMenu(socket),
+            );
+
             socket.on('chef_view_feedbacks', () =>
-                chefViewFeedbacks(socket, connection),
+                feedbackRepository.chefViewFeedbacks(socket),
             );
         })
         .catch(err => {

@@ -1,55 +1,52 @@
-import { Socket } from 'socket.io';
+import EmployeeService from '../Repository/EmployeeRepository';
 import { getConnection } from '../../utils/connectionManager';
-import {
-    handleShowRollout,
-    handleCreateProfile,
-    handleVoteForMenu,
-    handleViewMenu,
-    handleCheckItemExists,
-    handleGiveFeedback,
-    handleViewFeedbacks,
-    handleShowFinalList,
-    handleViewNotification,
-    handleViewDiscardList,
-    handleGiveRecipe,
-} from '../Repository/EmployeeRepository';
+import { Socket } from 'socket.io';
 
-export const handleEmployeeSocketEvents = (socket: Socket) => {
+const handleSocketConnections = (socket: Socket) => {
+
     getConnection()
         .then(connection => {
-            socket.on('show_rollout', data =>
-                handleShowRollout(socket, connection, data),
-            );
-            socket.on('create_profile', data =>
-                handleCreateProfile(socket, connection, data),
-            );
-            socket.on('vote_for_menu', data =>
-                handleVoteForMenu(socket, connection, data),
-            );
-            socket.on('view_menu', () => handleViewMenu(socket, connection));
-            socket.on('check_item_exists', data =>
-                handleCheckItemExists(socket, connection, data),
-            );
-            socket.on('give_feedback', data =>
-                handleGiveFeedback(socket, connection, data),
-            );
-            socket.on('view_feedbacks', data =>
-                handleViewFeedbacks(socket, connection, data),
-            );
-            socket.on('show_discard', data =>
-                handleViewDiscardList(socket, connection, data),
-            );
-            socket.on('show_finalList', data =>
-                handleShowFinalList(socket, connection, data),
-            );
-            socket.on('give_recipe', data =>
-                handleGiveRecipe(socket, connection, data),
-            );
-            socket.on('view_notification', data =>
-                handleViewNotification(socket, connection, data),
-            );
+            const employeeService = new EmployeeService(connection);
+
+           socket.on('show_rollout', (data) => employeeService.handleShowRollout(socket, data))
+
+            socket.on('create_profile', (data) => {
+                employeeService.handleCreateProfile(socket, data);
+            });
+
+            socket.on('vote_for_menu', (data) => {
+                employeeService.handleVoteForMenu(socket, data);
+            });
+
+            socket.on('view_menu', () => {
+                employeeService.handleViewMenu(socket);
+            });
+
+            socket.on('check_item_exists', (data) => {
+                employeeService.handleCheckItemExists(socket, data);
+            });
+
+            socket.on('give_feedback', (data) => {
+                employeeService.handleGiveFeedback(socket, data);
+            });
+
+            socket.on('view_feedbacks', (data) => {
+                employeeService.handleViewFeedbacks(socket, data);
+            });
+
+            socket.on('show_final_list', (data) => {
+                employeeService.handleShowFinalList(socket, data);
+            });
+
+            socket.on('view_menu_list', () => {
+                employeeService.handleViewMenuList(socket);
+            });
+
         })
         .catch(err => {
             console.error('Error getting connection from pool:', err);
         });
 };
+
+
+export default handleSocketConnections;
