@@ -1,19 +1,19 @@
-import { question, rl } from '../../utils/readline';
-import { socket } from '../../utils/socket';
+import { question, rl } from '../../utils/readlineUtils';
+import { socket } from '../../utils/socketClient';
 import { printTable } from '../../utils/tableFormat';
+import AdminSocketListenersInstance from '../SocketHandler/adminSocketListeners';
 import authService from './authHandler';
 
 class AdminOperations {
     constructor() {
-        this.setupSocketListeners();
+        AdminSocketListenersInstance.setupSocketListeners();
     }
 
     public showMenu() {
         console.log('Admin operations:');
         const operations = [
             { Option: '1', Description: 'Modify Menu' },
-            { Option: '2', Description: 'View Reports' },
-            { Option: '3', Description: 'Logout' },
+            { Option: '2', Description: 'Logout' },
         ];
         console.table(operations);
         rl.question('Choose an option: ', option => {
@@ -23,9 +23,6 @@ class AdminOperations {
                     break;
                 case '2':
                     this.deleteItem('admin');
-                    break;
-                case '3':
-                    authService.logOut();
                     break;
                 default:
                     console.log('Invalid option');
@@ -65,7 +62,7 @@ class AdminOperations {
     }
 
     private async updateItem() {
-        const id = await question('Enter item Id that will be updated');
+        const id = await question('Enter item Id that will be updated: ');
         socket.emit('check_item_exists', { id });
 
         socket.once('check_item_exists_response', async response => {
@@ -103,67 +100,12 @@ class AdminOperations {
         });
     }
 
-    private async deleteItem(role: string) {
+    public async deleteItem(role: string) {
         const id = await question('Item id ');
         socket.emit('delete_item', { id, role });
-    }
-
-    private setupSocketListeners() {
-        socket.on('add_item_response', data => {
-            if (data.success) {
-                console.log(`\n****${data.item} added successfully`);
-                rl.question('\nDo you want to add another item? (yes/no): ', answer => {
-                    if (answer.toLowerCase() === 'yes') {
-                        this.addItem('admin');
-                    } else {
-                        this.showMenu();
-                    }
-                });
-            } else {
-                console.log('\n****Failed to add item: ' + data.message);
-                rl.question('\nDo you want to try again to add Item ? (yes/no): ', answer => {
-                    if (answer.toLowerCase() === 'yes') {
-                        this.addItem('admin');
-                    } else {
-                        this.showMenu();
-                    }
-                });
-            }
-        });
-
-        socket.on('delete_item_response', data => {
-            if (data.success) {
-                console.log('****Item deleted successfully!');
-                rl.question('Do you want to delete another item? (yes/no): ', answer => {
-                    if (answer.toLowerCase() === 'yes') {
-                        this.deleteItem('admin');
-                    } else {
-                        this.showMenu();
-                    }
-                });
-            } else {
-                console.log('****Failed to delete item: ' + data.message);
-                rl.question('Do you want to try again to delete Item ? (yes/no): ', answer => {
-                    if (answer.toLowerCase() === 'yes') {
-                        this.deleteItem('admin');
-                    } else {
-                        this.showMenu();
-                    }
-                });
-            }
-        });
-
-        socket.on('update_item_response', data => {
-            if (data.success) {
-                console.log('--> Item updated successfully!\n');
-                this.showMenu();
-            } else {
-                console.log('--->Failed to update item: ' + data.message);
-                this.showMenu();
-            }
-        });
     }
 }
 
 const adminOperationsInstance = new AdminOperations();
 export default adminOperationsInstance;
+

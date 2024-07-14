@@ -1,7 +1,7 @@
 
 import { Socket } from 'socket.io';
 import { AdminRepository } from '../Repository/AdminRepository';
-import { getConnection } from '../../utils/connectionManager';
+import { getConnection } from '../../utils/dbConnection';
 
 export const handleAdminSocketEvents = async (socket: Socket) => {
     getConnection()

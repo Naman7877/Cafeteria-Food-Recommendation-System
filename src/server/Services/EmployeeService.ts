@@ -1,5 +1,5 @@
 import EmployeeService from '../Repository/EmployeeRepository';
-import { getConnection } from '../../utils/connectionManager';
+import { getConnection } from '../../utils/dbConnection';
 import { Socket } from 'socket.io';
 
 const handleSocketConnections = (socket: Socket) => {
@@ -8,7 +8,7 @@ const handleSocketConnections = (socket: Socket) => {
         .then(connection => {
             const employeeService = new EmployeeService(connection);
 
-           socket.on('show_rollout', (data) => employeeService.handleShowRollout(socket, data))
+            socket.on('show_rollout', (data) => employeeService.handleShowRollout(socket, data))
 
             socket.on('create_profile', (data) => {
                 employeeService.handleCreateProfile(socket, data);
@@ -41,6 +41,18 @@ const handleSocketConnections = (socket: Socket) => {
             socket.on('view_menu_list', () => {
                 employeeService.handleViewMenuList(socket);
             });
+
+            socket.on('view_notification', data =>
+                employeeService.handleViewNotification(socket, data),
+            );
+
+            socket.on('give_recipe', data =>
+                employeeService.handleGiveRecipe(socket, data),
+            );
+
+            socket.on('show_discard', data =>
+                employeeService.handleViewDiscardList(socket, data),
+            );
 
         })
         .catch(err => {

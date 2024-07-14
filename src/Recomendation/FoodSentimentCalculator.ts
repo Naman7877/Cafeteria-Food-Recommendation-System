@@ -58,7 +58,7 @@ export class FoodSentimentCalculator {
     async calculateAllFoodSentiments(
         menuItem?: string,
     ): Promise<FoodSentiment[]> {
-        const foodIds = await this.dbService.fetchAllFoodIds(menuItem);
+        const foodIds = await this.dbService.fetchAllFoodIds(menuItem) ?? [];
         const foodSentiments: FoodSentiment[] = [];
 
         for (const foodId of foodIds) {

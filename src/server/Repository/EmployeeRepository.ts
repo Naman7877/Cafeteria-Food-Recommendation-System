@@ -13,9 +13,7 @@ class EmployeeService {
         try {
             const [userProfileResults] = await (this.connection.execute('SELECT * FROM userProfile WHERE userId = ?', [userId]) as Promise<[RowDataPacket[], FieldPacket[]]>);
 
-
             const userProfile = userProfileResults[0];
-            console.log(userProfile);
 
             const [rolloutResults] = await (this.connection.execute(
                 `SELECT r.*, 
@@ -26,8 +24,6 @@ class EmployeeService {
             FROM rollover r
             JOIN menuitem m ON r.itemId = m.id`,
             ) as Promise<[RowDataPacket[], FieldPacket[]]>);
-
-            console.log(rolloutResults);
 
             const sortedRolloutItems = rolloutResults.sort((a, b) => {
                 if (
@@ -164,25 +160,20 @@ class EmployeeService {
                     success: false,
                     message: 'You have already voted for an item.',
                 });
-                await this.connection.rollback();
-
-                return;
+                // await this.connection.rollback();
+                // return;
             }
 
             await this.connection.execute(
                 'UPDATE rollover SET vote = vote + 1 WHERE itemId = ?',
                 [itemId],
             );
-
             console.log(itemId);
 
             await this.connection.execute(
                 'INSERT INTO votedUsersList (userId, itemId) VALUES (?, ?)',
                 [userId, itemId],
             );
-
-            await this.connection.commit();
-
 
             socket.emit('vote_for_menu_response', {
                 success: true,
@@ -325,7 +316,53 @@ class EmployeeService {
         }
     }
 
-    public async handleViewMenuList(socket: Socket,) {
+    public handleGiveRecipe = async (
+        socket: Socket,
+        data: any,
+    ) => {
+        const { id, dislikeReason, tasteExpectations, message } = data;
+
+        try {
+            const [discardResults] = await (this.connection.execute(
+                `SELECT d.*, m.name AS itemName, m.mealTime
+             FROM discardlist d
+             JOIN menuitem m ON d.itemId = m.id
+             WHERE d.itemId = ?`,
+                [id],
+            ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+
+            if (discardResults.length <= 0) {
+                this.connection.release();
+                socket.emit('give_discardItem_feedback_response', {
+                    success: false,
+                    message: 'Item ID not found in discard list',
+                });
+                return;
+            }
+
+            const menuItem = discardResults[0];
+
+            await this.connection.execute(
+                `INSERT INTO discardlistitemfeedback (itemId, dislikeReason, tasteExpectations, \`mom'sRecipe\`) VALUES (?, ?, ?, ?)`,
+                [id, dislikeReason, tasteExpectations, message],
+            );
+
+            socket.emit('give_discardItem_feedback_response', {
+                success: true,
+                message:
+                    'Message, feedback, and rating stored in feedback table successfully',
+                discardList: discardResults,
+            });
+        } catch (err) {
+            socket.emit('give_discardItem_feedback_response', {
+                success: false,
+                message: 'Database error',
+            });
+            console.error('Database query error', err);
+        }
+    };
+
+    public async handleViewMenuList(socket: Socket) {
         try {
             const [results] = await this.connection.execute('SELECT * FROM final_menu');
 
@@ -336,6 +373,137 @@ class EmployeeService {
                 message: 'Database error',
             });
             console.error('Database query error', err);
+        }
+    }
+
+    public async handleViewDiscardList(
+        socket: Socket,
+        data: any
+    ) {
+        const today = new Date().toISOString().split('T')[0];
+        try {
+            const [results] = await (this.connection.execute(
+                `SELECT d.*, m.name AS itemName
+             FROM discardlist d
+             JOIN menuitem m ON d.itemId = m.id`,
+            ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+
+            console.log(results);
+
+            if (results.length <= 0) {
+                socket.emit('show_discard_response', {
+                    success: true,
+                    discardList: results,
+                    userId: data.userId,
+                });
+            }
+
+            socket.emit('show_discard_response', {
+                success: true,
+                discardList: results,
+                userId: data.userId,
+            });
+        } catch (err) {
+            socket.emit('show_discard_response', {
+                success: false,
+                message: 'Database error',
+            });
+            console.error('Database query error', err);
+        }
+    };
+
+    public handleViewNotification = async (
+        socket: Socket,
+        data: any,
+    ) => {
+        const { userId } = data;
+        try {
+            const lastNotificationId = await this.getLastNotificationId(userId);
+            const notifications = await this.getNotifications(
+                lastNotificationId ?? undefined,
+            );
+
+            if (notifications.length > 0) {
+                const latestNotificationId = notifications[0].notificationId;
+                console.log(latestNotificationId);
+
+                await this.updateLastNotificationId(userId, latestNotificationId);
+            }
+
+            socket.emit('view_notification_response', {
+                success: true,
+                userId: data.userId,
+                notifications: notifications,
+            });
+        } catch (err) {
+            socket.emit('view_notification_response', {
+                success: false,
+                message: 'Database error',
+            });
+            console.error('Database query error', err);
+        }
+    };
+
+    async getNotifications(sinceNotificationId?: number) {
+        try {
+            if (sinceNotificationId) {
+                const [results] = await (this.connection.execute(
+                    'SELECT * FROM notifications WHERE notificationId > ? ORDER BY createdAt DESC',
+                    [sinceNotificationId],
+                ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+                return results;
+            } else {
+                const [results] = await (this.connection.execute(
+                    'SELECT * FROM notifications ORDER BY createdAt DESC',
+                ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+                return results;
+            }
+        }
+        finally {
+            this.connection.release();
+        }
+    }
+
+    async getLastNotificationId(userId: number): Promise<number | null> {
+        try {
+            const [rows] = await (this.connection.execute(
+                'SELECT notificationId FROM viewednotification WHERE userId = ?',
+                [userId],
+            ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+            if (rows.length > 0) {
+                return rows[rows.length - 1].notificationId;
+            } else {
+                return null;
+            }
+        }
+        finally {
+            this.connection.release();
+        }
+    }
+
+    async updateLastNotificationId(
+        userId: number,
+        notificationId: number,
+    ) {
+        try {
+            const [rows] = await (this.connection.execute(
+                'SELECT * FROM viewednotification WHERE userId = ?',
+                [userId],
+            ) as Promise<[RowDataPacket[], FieldPacket[]]>);
+
+            if (rows.length > 0) {
+                await this.connection.execute(
+                    'UPDATE viewednotification SET notificationId = ? WHERE userId = ?',
+                    [notificationId, userId],
+                );
+            } else {
+                await this.connection.execute(
+                    'INSERT INTO viewednotification (userId, notificationId) VALUES (?, ?)',
+                    [userId, notificationId],
+                );
+            }
+        } finally {
+            this.connection.release();
         }
     }
 }

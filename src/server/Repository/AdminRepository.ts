@@ -91,7 +91,6 @@ export class AdminRepository {
             );
             socket.emit('update_item_response', { success: true });
             await insertNotification('Item availability updated: ' + id);
-            console.log('\n----->Item availability updated\n');
         } catch (err) {
             socket.emit('update_item_response', {
                 success: false,

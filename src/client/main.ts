@@ -1,4 +1,4 @@
-import { socket } from '../utils/socket';
+import { socket } from '../utils/socketClient';
 import { showMenu } from './Controller/mainMenuController';
 
 socket.on('connect', () => {

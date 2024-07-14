@@ -12,13 +12,16 @@ export class DatabaseService {
         return results;
     }
 
-    async fetchAllFoodIds(menuType?: string): Promise<string[]> {
+    async fetchAllFoodIds(menuType?: string): Promise<string[] | void> {
         const connection = await pool.getConnection();
         let results;
 
         if (menuType) {
-            [results] = await connection.execute<RowDataPacket[]>(
-                'SELECT DISTINCT itemId FROM feedback WHERE mealType = ?',
+            const [results] = await connection.execute<RowDataPacket[]>(
+                `SELECT DISTINCT f.itemId 
+                 FROM feedback f
+                 JOIN menuTable m ON f.itemId = m.itemId
+                 WHERE f.mealType = ?`,
                 [menuType],
             );
         } else {
@@ -27,8 +30,12 @@ export class DatabaseService {
             );
         }
 
-        connection.release();
-        return results.map((row: any) => row.itemId);
+        if (results && results.length > 0) {
+            const itemIds = results.map(row => row.itemId);
+            console.log(itemIds);
+        } else {
+            console.log('No matching items found');
+        }
     }
 
     async clearRolloutTable(): Promise<void> {

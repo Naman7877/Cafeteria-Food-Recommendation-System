@@ -1,9 +1,9 @@
 import { Socket } from 'socket.io';
-import { rl } from '../../utils/readline';
+import { rl } from '../../utils/readlineUtils';
 import {
     getConnection,
     releaseConnection,
-} from '../../utils/connectionManager';
+} from '../../utils/dbConnection';
 import { ChefRepository } from '../Repository/ChefRepository';
 
 export const handChefSocketEvents = (socket: Socket) => {

@@ -1,9 +1,9 @@
 import { Socket } from 'socket.io';
-import { rl } from '../../utils/readline';
+import { rl } from '../../utils/readlineUtils';
 import {
     getConnection,
     releaseConnection,
-} from '../../utils/connectionManager';
+} from '../../utils/dbConnection';
 import { AuthRepository, UserConnectionManager } from '../Repository/AuthRepository';
 
 export const handleAuthSocketEvents = (socket: Socket) => {
