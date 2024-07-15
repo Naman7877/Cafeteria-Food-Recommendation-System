@@ -17,11 +17,8 @@ export class DatabaseService {
         let results;
 
         if (menuType) {
-            const [results] = await connection.execute<RowDataPacket[]>(
-                `SELECT DISTINCT f.itemId 
-                 FROM feedback f
-                 JOIN menuTable m ON f.itemId = m.itemId
-                 WHERE f.mealType = ?`,
+            [results] = await connection.execute<RowDataPacket[]>(
+                'SELECT DISTINCT itemId FROM feedback WHERE mealType = ?',
                 [menuType],
             );
         } else {
@@ -30,12 +27,8 @@ export class DatabaseService {
             );
         }
 
-        if (results && results.length > 0) {
-            const itemIds = results.map(row => row.itemId);
-            console.log(itemIds);
-        } else {
-            console.log('No matching items found');
-        }
+        connection.release();
+        return results.map((row: any) => row.itemId);
     }
 
     async clearRolloutTable(): Promise<void> {

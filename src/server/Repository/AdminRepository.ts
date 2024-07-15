@@ -2,6 +2,7 @@
 import { Socket } from 'socket.io';
 import { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import { insertNotification } from '../Services/insertNotification';
+import { AddItemParams } from '../../models/paramsInterface';
 
 export class AdminRepository {
     private connection: PoolConnection;
@@ -10,7 +11,7 @@ export class AdminRepository {
         this.connection = connection;
     }
 
-    public async addItem(socket: Socket, data: any) {
+    public async addItem(socket: Socket, data: AddItemParams) {
         try {
             const [results] = await this.connection.execute(
                 'INSERT INTO menuitem (id, name, price, availability, mealTime, dietType, spiceLevel, region, sweetDish) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
